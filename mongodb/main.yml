@@ -1,0 +1,44 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+  - name: Mongodb | import Key
+    apt_key:
+      keyserver: hkp://keyserver.ubuntu.com:80
+      id: EA312927
+
+  - name: MondoDB | Add repository
+    apt_repository:
+      filename: '/etc/apt/sources.list.d/monodb-org-3.2.list'
+      repo: 'deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse'
+      state: present
+      update_cache: yes
+
+  - name: MongoDB | installing MongoDB
+    apt:
+      name: mongodb-org
+      state: present
+      update_cache: yes
+
+  - name: Mongodb | Ensure MongoDB is running 
+    service:
+      name: mongod
+      state: started
+  - name: Enableing Mondodb 
+    shell: "systemctl enable  mongod"
+
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d

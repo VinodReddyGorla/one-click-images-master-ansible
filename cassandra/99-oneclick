@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Casandra database  !
+
+Here we have install latest stable verison off Docker $(docker -v)
+
+Connect to Cassandra from cqlsh
+
+# exceute this commnad to go inside container 
+
+$ docker exec -it cassandra bash
+
+
+Casandra data stored in this location 
+
+/var/lib/cassandra
+
+
+# Make a cluster
+
+Assuming the first machine's IP address is 10.42.42.42 and the second's is 10.43.43.43, start the first with exposed gossip port:
+
+$ docker run --name some-cassandra -d -e CASSANDRA_BROADCAST_ADDRESS=10.42.42.42 -p 7000:7000 cassandra
+
+Then start a Cassandra container on the second machine, with the exposed gossip port and seed pointing to the first machine:
+
+$ docker run --name some-cassandra -d -e CASSANDRA_BROADCAST_ADDRESS=10.43.43.43 -p 7000:7000 -e CASSANDRA_SEEDS=10.42.42.42 cassandra
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Elasticsearch, Logstash, and Kibana
+
+# Elasticsarch required this value 
+sudo sysctl -w vm.max_map_count=262144
+
+# To start elk run this command 
+
+docker stack deploy -c stack.yml elk
+
+# then we can acceess the kibana dashboard 
+Kibana web interface: http://$myip:5601
+Elasticsearch JSON interface: http://$myip:9200
+Logstash Beats interface, receives logs from Beats such as Filebeat : http://$myip:5044
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

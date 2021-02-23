@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Ruby On Rails !!!
+
+
+Ruby On Rails !!!
+
+Postgresql default username : rubyonrails
+Postgresql default database : userdb
+Postgresql default password : rubyonrailstestuser
+
+
+Rails version : Rails 5.1.3
+Node js version:  $(node -v)
+
+# Move into the application directory
+cd myapp
+
+# To use Postgres with a username/password, modify the
+# config/database.yml file to contain the username/password/hostname=127.0.0.7
+
+# Create the database
+rake db:create
+
+rails server
+
+You can now visit http://$myip:3000 to view your new website!
+
+Now that you've got your machine setup, it's time to start building some Rails applications.
+
+Note: recommended to change default username and password
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

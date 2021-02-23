@@ -1,0 +1,35 @@
+{
+  "builders": [
+  
+    {
+      "type": "openstack",
+      "identity_endpoint": "http://192.168.3.223:35357/v3",
+      "tenant_name": "admin",
+      "domain_name": "default",
+      "username": "admin-liberty",
+      "password": "8e5640ca86ff12466302",
+      "region": "NJ",
+      "ssh_username": "ubuntu",
+      "ssh_keypair_name": "",
+      "ssh_agent_auth": false,
+      "security_groups": ["all_allow"],
+      "config_drive": true,
+      "image_name": "Ubuntu_16.04_packer",
+      "source_image": "4234152a-bf25-4d8c-95c7-9ec764befbf5",
+      "flavor": "m1.small",
+      "networks": ["c2a503e3-394f-42fc-b36e-16df92502f5f"]
+    }
+  ],
+
+   "provisioners": [{
+    "type": "shell",
+    "inline": [
+	  "sudo apt-add-repository ppa:ansible/ansible",
+	  "sudo apt update ",
+      "sudo apt install ansible tmux -y"
+    ]
+  }
+]
+ 	
+}
+

@@ -1,0 +1,38 @@
+{
+  "builders": [
+  
+    {
+      "type": "openstack",
+      "identity_endpoint": "http://192.168.16.23:5000/v3",
+      "tenant_name": "admin",
+      "domain_name": "Default",
+      "username": "admin",
+      "password": "systemongrid",
+      "region": "RegionOne",
+      "ssh_username": "ubuntu",
+      "ssh_agent_auth": true,
+      "ssh_keypair_name": "myhost",
+      "image_name": "ubuntu16_04_redis",
+      "source_image": "c98240a9-4ed6-4aeb-b405-93202b16d85b",
+      "flavor": "m1.small",
+      "networks": ["1b13e3dd-ee2c-454e-bf10-64d68648ef9e"],
+      "use_floating_ip": true,
+      "floating_ip_pool": "public" 
+    }
+  ], 
+ "provisioners": [{
+    "type": "shell",
+    "inline": [
+	"sudo apt update ",
+    "sudo apt install python-pip python-dev -y",
+    "sudo apt install redis-server -y",
+   " sudo systemctl enable redis-server.service"
+    ]
+  },
+  {
+    "type": "ansible",
+    "playbook_file": "main.yml" 
+  }
+]
+  
+}

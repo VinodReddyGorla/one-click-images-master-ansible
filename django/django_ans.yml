@@ -1,0 +1,81 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+  - name: Install Nginx
+    apt:
+      name: nginx
+      state: present
+      update_cache: yes
+      
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d
+
+  - name: copying django test project
+    copy: src='./myproject' dest='~/myproject'
+    become: yes
+    become_user: ubuntu
+
+
+  - name: Creates directory
+    file: path=~/myproject state=directory
+    become: yes
+    become_user: ubuntu
+
+  - name: makeing manage.py exe 
+    shell: chmod +x manage.py
+    args:
+      chdir: /home/ubuntu/myproject/myproject
+    become: yes
+    become_user: ubuntu
+
+  - postgresql_db:
+      name: userdb
+    become: yes
+    become_user: postgres
+
+      
+  - postgresql_user:
+      db: userdb
+      name: django
+      password: slieldjelso
+      priv: ALL
+    become: yes
+    become_user: postgres
+
+    
+  - name: creating virtualnev 
+    shell: 'virtualenv env'
+    args:
+      chdir: ~/myproject
+    become: yes
+    become_user: ubuntu
+
+
+
+  - pip:
+      name: django
+      virtualenv: ~/myproject/env
+    become: yes
+    become_user: ubuntu
+
+  - pip:
+      name: psycopg2
+      virtualenv: ~/myproject/env
+    become: yes
+    become_user: ubuntu
+
+

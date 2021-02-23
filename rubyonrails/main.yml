@@ -1,0 +1,56 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+      
+  - name: Install Nginx
+    apt:
+      name: nginx
+      state: present
+      update_cache: yes
+
+  - name: Install keys
+    shell: gpg --keyserver hkp://keys.gnupg.net:80 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+    become: yes
+    become_user: ubuntu
+    ignore_errors: yes
+
+
+  - name: installing rvm from source
+    shell: "curl -sSL https://get.rvm.io | bash -s stable && source ~/.rvm/scripts/rvm && rvm install 2.4.0 && rvm use 2.4.0 --default && gem install bundler && gem install rails && rails new myapp -d postgresql"
+    args:
+     executable: /bin/bash
+    become: yes
+    become_user: ubuntu
+
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d
+
+  
+  - postgresql_db:
+      name: userdb
+    become: yes
+    become_user: postgres
+
+      
+  - postgresql_user:
+      db: userdb
+      name: rubyonrails
+      password: rubyonrailstestuser
+      role_attr_flags: CREATEDB,CREATEROLE,NOSUPERUSER
+      priv: ALL
+    become: yes
+    become_user: postgres
+

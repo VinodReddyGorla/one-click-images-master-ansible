@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Drupal enviremnt !
+
+#   During initial Drupal setup,
+#   Database type: PostgreSQL
+#   Database name: postgres
+#   Database username: postgres
+#   Database password: password
+#   ADVANCED OPTIONS; Database host: postgres
+
+You can access  http://$myip:8080
+
+
+
+Here we have install latest stable verison off Docker $(docker -v)
+postgresql default password : password
+
+
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

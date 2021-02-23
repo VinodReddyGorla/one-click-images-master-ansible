@@ -1,0 +1,32 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d
+
+  - name: copying django test project
+    copy: src='./docker-compose.yml' dest='~'
+    become: yes
+    become_user: ubuntu
+
+  - name: runnig docker stack
+    shell: sudo docker-compose up -d
+    args:
+      chdir: ~
+    become: yes
+    become_user: ubuntu

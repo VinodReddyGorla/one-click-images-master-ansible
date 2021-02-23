@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to couchdb enviremnt !
+
+Data stored in /var/cassandra
+
+Here we have install latest stable verison off Docker $(docker -v)
+
+couchdb default port number 5984
+
+Default username and password  = admin:password
+
+
+You can aceess the dashboard here : http://$myip:5984/_utils/
+
+docker exec -it couchdb bash
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

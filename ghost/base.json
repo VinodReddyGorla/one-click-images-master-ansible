@@ -1,0 +1,43 @@
+{
+  "builders": [
+  
+    {
+      "type": "openstack",
+      "identity_endpoint": "http://192.168.16.23:5000/v3",
+      "tenant_name": "admin",
+      "domain_name": "Default",
+      "username": "admin",
+      "password": "systemongrid",
+      "region": "RegionOne",
+      "ssh_username": "ubuntu",
+      "ssh_agent_auth": true,
+      "ssh_keypair_name": "myhost",
+      "image_name": "ubuntu16_04_Ghost",
+      "source_image": "c98240a9-4ed6-4aeb-b405-93202b16d85b",
+      "flavor": "m1.small",
+      "networks": ["1b13e3dd-ee2c-454e-bf10-64d68648ef9e"],
+      "use_floating_ip": true,
+      "floating_ip_pool": "public" 
+    }
+  ], 
+ "provisioners": [{
+    "type": "shell",
+    "inline": [
+	"sudo apt update ",
+    "sudo apt install python-pip python-dev -y",
+    "sudo curl -sSL https://get.docker.com/ | sh",
+    "sudo usermod -a -G docker ubuntu ",
+    "sudo systemctl enable docker --now",
+    "sudo docker pull ghost",
+    "sudo mkdir -p /var/lib/ghost/blog",
+    "sudo docker run --name ghost --restart always -d -e NODE_ENV=production -p 80:2368 -v /var/lib/ghost/blog:/var/lib/ghost/content ghost"
+
+    ]
+  },
+  {
+    "type": "ansible",
+    "playbook_file": "main.yml" 
+  }
+]
+  
+}

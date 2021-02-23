@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Docker  enviremnt !
+
+You can access  http://$myip:8080
+
+Here we have install latest stable verison off Docker $(docker -v)
+mysql default password : K6wZnzkJ4GcQDjqt
+
+
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

@@ -1,0 +1,211 @@
+#!/bin/bash
+
+set -e
+
+# Containerized MediaWiki install & startup.
+
+
+BASEDIR=/srv/mediawiki-containers
+DATADIR="$BASEDIR/data"
+
+if [ -d $DATADIR -a -f $DATADIR/config ]; then
+    source $DATADIR/config
+fi
+
+# Generate MEDIAWIKI_ADMIN_PASS
+if [ -z "$MEDIAWIKI_ADMIN_PASS" ];then
+    MEDIAWIKI_ADMIN_PASS=$(</dev/urandom tr -dc A-Za-z0-9 | head -c8)
+fi
+
+# Some utilities
+_COLORS=${BS_COLORS:-$(tput colors 2>/dev/null || echo 0)}
+__detect_color_support() {
+    if [ $? -eq 0 ] && [ "$_COLORS" -gt 2 ]; then
+        RC="\033[1;31m"
+        GC="\033[1;32m"
+        BC="\033[1;34m"
+        YC="\033[1;33m"
+        EC="\033[0m"
+    else
+        RC=""
+        GC=""
+        BC=""
+        YC=""
+        EC=""
+    fi
+}
+__detect_color_support
+
+# Echo info to stdout
+echoinfo() {
+    printf "${GC}[INFO]${EC}: %s\n" "$@";
+}
+
+# Echo error to stderr
+echoerror() {
+    printf "${RC}[ERROR]${EC}: %s\n" "$@" 1>&2;
+}
+
+# Echo warnings to stdout
+echowarn() {
+    printf "${YC}[WARN]${EC}: %s\n" "$@";
+}
+
+start () {
+    echoinfo "Starting DNS container.."
+    docker run -d \
+        --name=dnsdock \
+        -v /var/run/docker.sock:/run/docker.sock \
+        tonistiigi/dnsdock
+    DNS=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' dnsdock)
+
+    echoinfo "Starting mysql(mariadb) container.."
+    docker run -d \
+        --name=mysql \
+        -e SERVICE_NAME=mysql \
+        -v $DATADIR/mysql:/var/lib/mysql:rw \
+        -e MYSQL_ROOT_PASSWORD=password \
+        --dns "$DNS" \
+        mariadb
+
+    # Set up a default domain for start..
+    if [ -z "$MEDIAWIKI_DOMAIN" ]; then
+        MEDIAWIKI_DOMAIN="localhost"
+    fi
+
+    echoinfo "Starting mediawiki container.."
+    docker run -d \
+        --name=mediawiki \
+        -v `pwd`/conf/mediawiki:/conf:ro \
+        -v $DATADIR/mediawiki:/data:rw \
+        -e MEDIAWIKI_SITE_SERVER="//$MEDIAWIKI_DOMAIN" \
+        -e MEDIAWIKI_SITE_NAME=MediaWiki \
+        -e MEDIAWIKI_SITE_LANG=en \
+        -e MEDIAWIKI_ADMIN_USER=admin \
+        -e MEDIAWIKI_ADMIN_PASS=$MEDIAWIKI_ADMIN_PASS \
+        -e MEDIAWIKI_UPDATE=true \
+        -e MEDIAWIKI_DB_USER=root \
+        -e MEDIAWIKI_DB_PASSWORD=password \
+        -e MEDIAWIKI_DB_HOST=mysql.docker \
+        -e MEDIAWIKI_RESTBASE_URL=http://mediawiki-node-services.docker:7231/localhost/v1 \
+        --dns "$DNS" \
+        -p 80:80 \
+        wikimedia/mediawiki
+
+    echoinfo "Starting mediawiki-node-services container.."
+    docker run -d \
+        --name=mediawiki-node-services \
+        -v $DATADIR/node-services:/data \
+        -e MEDIAWIKI_API_URL=http://mediawiki.docker/api.php \
+        --dns "$DNS" \
+        wikimedia/mediawiki-node-services
+
+    # Follow the mediawiki container logs
+    #set -o pipefail
+    docker logs -f mediawiki
+}
+
+docker_pull() {
+    docker pull tonistiigi/dnsdock
+    docker pull mariadb
+    docker pull wikimedia/mediawiki
+    docker pull wikimedia/mediawiki-node-services
+}
+
+stop () {
+    echoinfo "Stopping and deleting all containers.."
+    # The containers themselves are stateless (all data is stored in
+    # /srv/mediawiki-containers/data), so always nuke them.
+    docker rm -f mediawiki 2>/dev/null || true
+    docker rm -f mediawiki-node-services 2>/dev/null || true
+    docker rm -f mysql 2>/dev/null || true
+    docker rm -f dnsdock 2>/dev/null || true
+}
+
+install_git() {
+    if ! hash git 2>/dev/null;then
+        echoinfo "Installing git.."
+        apt-get install -y git
+    else
+        echoinfo "Git already installed."
+    fi
+}
+
+check_out_mediawiki_containers() {
+    if [ ! -d "$BASEDIR" ];then
+        echoinfo "Cloning mediawiki-containers to $BASEDIR.."
+        git clone https://github.com/wikimedia/mediawiki-containers.git "$BASEDIR"
+    else
+        cd "$BASEDIR"
+        echoinfo "Updating $BASEDIR.."
+        git pull
+    fi
+    cd "$BASEDIR"
+}
+
+usage() {
+    echowarn "Usage: $0 [start|stop|restart|install]"
+}
+
+install() {
+    echoinfo "The installer will:"
+    echoinfo " - Check docker and git dependencies, and install them if necessary."
+    echoinfo " - Configure and start MediaWiki containers."
+    echoinfo " - Set up a systemd unit, so that MediaWiki containers are started on boot."
+    # Make sure we have git.
+    install_git
+
+    # Clone / update the mediawiki-containers repository.
+    check_out_mediawiki_containers
+
+    cd $BASEDIR
+    
+    source ./lib/install.sh
+    do_install
+
+    # Update docker images
+    docker_pull
+
+    service mediawiki-containers restart
+
+    echoinfo 'Following startup via `journalctl -f -u mediawiki-containers`.'
+    journalctl -f -u mediawiki-containers -n 0 | sed '/: Done in /q'
+    # Get the last line, too
+    lastline=$(journalctl -u mediawiki-containers | tail -1 | grep AH00558)
+    if [ -z "$lastline" ];then
+        echoerror "Apache startup apparently didn't finish properly."
+        echoerror "Output of journalctl -u mediawiki-containers:"
+        journalctl -u mediawiki-containers
+    else
+        echo $lastline
+        echo
+        echoinfo "Congratulations! Your wiki should now be available at http://$MEDIAWIKI_DOMAIN/."
+        echoinfo "The password for the 'admin' user is '$MEDIAWIKI_ADMIN_PASS'".
+    fi
+    echo
+    echoinfo 'For detailed information / logs, try'
+    echoinfo '  - `docker logs -f mediawiki` for MediaWiki,'
+    echoinfo '  - `docker logs -f mysql` for MySQL,'
+    echoinfo '  - `docker logs -f mediawiki-node-services` for services.'
+    echo
+}
+
+if [ "$1" == "stop" ]; then
+    stop
+    exit 0
+elif [ "$1" == "start" ]; then
+    start
+elif [ "$1" == "restart" ]; then
+    stop
+    start
+    exit 0
+elif [ -z "$1" -o "$1" == "install" ]; then
+    echoinfo "Welcome to MediaWiki-containers!"
+    echo
+    install "$1"
+    exit 0
+else
+    echo "Invalid parameter $1"
+    usage
+    exit 1
+fi

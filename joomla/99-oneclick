@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Joomla  enviremnt ! 
+
+Joomla storing all data in mysql database
+
+You can access  http://$myip:80
+
+Here we have install latest stable verison off Docker $(docker -v)
+mysql default password : password
+
+
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

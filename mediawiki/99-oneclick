@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Mediawiki
+
+Run this commnds 
+
+$ sudo bash mediawiki.sh 
+
+# 1. It will ask you to enter you domain enter your public ip here $myip
+# 2. It will ask you enter do you want latest updates please  choose based on your requirement.
+
+# It will take 2 to 3 min once it's done It will out put the password and access the url
+
+You can access  http://$myip
+
+Here we have install latest stable verison off Docker $(docker -v)
+mysql default username:password : wikiuser:mysecret
+
+
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Ghost  enviremnt !
+
+Here we have install latest stable verison off Ghost 1.0.2
+
+You can access  http://$myip
+You can access setup page http://$myip/ghost
+
+To see the logs we can run this command 
+
+  docker logs ghost
+
+All the blog data has been stored in  /var/lib/ghost/blog
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

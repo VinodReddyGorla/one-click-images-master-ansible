@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to owncloud  enviremnt !
+
+# access via http://$myip
+# ownCloud with MariaDB/MySQL
+# During initial ownCloud setup, select "Storage & database" --> "Configure the database" --> "MySQL/MariaDB"
+# Database user: root
+# Database password: K6wZnzkJ4GcQDjqt
+# Database name: pick any name
+# Database host: replace "localhost" with "mysql"
+
+Here we have install latest stable verison off Docker $(docker -v)
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

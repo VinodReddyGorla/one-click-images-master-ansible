@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+
+-------------------------------------------------------------------------------
+Welcome to the MEAN Stack!
+
+MEAN is a boilerplate that provides a nice starting point for MongoDB, Node.js,
+Express, and AngularJS based applications. It is designed to give you quick and
+organized way to start.  node version 6-x
+
+
+https://docs.npmjs.com/getting-started/fixing-npm-permissions
+
+Installed Npm packages 
+
+      - npm install -g bower
+      - npm install -g gulp
+      - npm install -g express 
+      - npm install -g angular
+      - npm install -g mongoose
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

@@ -1,0 +1,29 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d
+
+  - name: chanding default ssh port to 1022
+    shell: sed -i -e "/^#*[\\s]*Port\\s.*/s//Port 1022/" /etc/ssh/sshd_config
+
+  - name: reload sshd servervice 
+    shell: systemctl restart sshd
+
+  - name: docker run gitlub 
+    shell: docker run --detach --hostname gitlab.example.com --publish 443:443 --publish 80:80 --publish 22:22 --name gitlab --restart always --volume /srv/gitlab/config:/etc/gitlab --volume /srv/gitlab/logs:/var/log/gitlab --volume /srv/gitlab/data:/var/opt/gitlab gitlab/gitlab-ce

@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Configured as part of the systemongrid 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+
+#############
+
+Welcome to SystemOnGrid
+
+#############
+-------------------------------------------------------------------------------
+Wellcome to Magento !
+
+Database configuration :
+
+mysql host                  : mysql
+mysql username              : root
+mysql default root password : root
+mysql database is           : magento
+
+
+After that there is couple of setting you need confiugre like time and currency 
+once we finish that installation begins it will take 5 to 8 min to complete the installation.
+
+You can access Magento http://$myip
+
+
+-------------------------------------------------------------------------------
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF
+

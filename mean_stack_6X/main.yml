@@ -1,0 +1,86 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo 
+  tasks:
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+  - name: Mongodb | import Key
+    apt_key:
+      keyserver: hkp://keyserver.ubuntu.com:80
+      id: EA312927
+
+  - name: MondoDB | Add repository
+    apt_repository:
+      filename: '/etc/apt/sources.list.d/monodb-org-3.2.list'
+      repo: 'deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse'
+      state: present
+      update_cache: yes
+
+  - name: MongoDB | installing MongoDB
+    apt:
+      name: mongodb-org
+      state: present
+      update_cache: yes
+
+  - name: Mongodb | Ensure MongoDB is running 
+    service:
+      name: mongod
+      state: started
+  - name: Enableing Mondodb 
+    shell: "systemctl enable  mongod"
+
+  - name: copying wellcome message file into server 
+    copy: src='./99-oneclick' dest='/etc/update-motd.d'
+
+  - name: makeing 99-oneclick exe 
+    shell: chmod +x 99-oneclick
+    args:
+      chdir: /etc/update-motd.d
+
+  - name: install Nodejs
+    shell: "{{ item }}"
+    with_items:
+      - apt install python-software-properties -y
+      - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+      - apt install nodejs -y
+
+  - name: Make a directory for global installations
+    file: path=~/.npm-global state=directory
+    become: yes
+    become_user: ubuntu
+
+  - name: Configure npm to use the new directory path
+    shell: " npm config set prefix '~/.npm-global' "
+    become: yes
+    become_user: ubuntu
+
+  - name: adding env profile file and add this line
+    shell: " echo export PATH=/home/ubuntu/.npm-global/bin:$PATH >> ~/.profile"
+    become: yes
+    become_user: ubuntu
+
+  - name: update your system variables
+    shell: "source ~/.profile"
+    args:
+     executable: /bin/bash
+    become: yes
+    become_user: ubuntu
+
+  - name: install npm modules
+    shell: "{{ item }}"
+    with_items:
+      - npm install -g bower
+      - npm install -g gulp
+      - npm install -g jshint
+      - npm install -g express 
+      - npm install -g angular
+      - npm install -g mongoose
+    become: yes
+    become_user: ubuntu
+
